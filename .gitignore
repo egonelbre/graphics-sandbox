@@ -1,0 +1,6 @@
+.release
+*.exe
+*.vscode
+*~*
+*.~*
+.DS_Store
