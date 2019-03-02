@@ -62,6 +62,13 @@
 			color: 'blue'
 		});
 
+		geometry.vertices.push(
+			new THREE.Vector3(-10, +10, +0),
+			new THREE.Vector3(+10, -10, +0),
+			new THREE.Vector3(+10, +10, +0)
+		);
+		geometry.faces.push(new THREE.Face3(0, 1, 2));
+
 		var triangle = new THREE.Mesh(geometry, material);
 		scene.add(triangle);
 	}
