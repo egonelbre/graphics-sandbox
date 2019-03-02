@@ -1,1 +1,1 @@
-# Three.js experiments
+# Three.js sandbox
