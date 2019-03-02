@@ -51,14 +51,8 @@
 
 	scene.add(camera);
 
-	drawTriangle([0.0, 0.0]);
-	renderer.render(scene, camera);
-	
-	function drawTriangle(position) {
+	{
 		var geometry = new THREE.Geometry();
-		var material = new THREE.MeshBasicMaterial({
-			color: 'blue'
-		});
 
 		geometry.vertices.push(
 			new THREE.Vector3(-10, +10, +0),
@@ -67,8 +61,10 @@
 		);
 		geometry.faces.push(new THREE.Face3(0, 1, 2));
 
-		var triangle = new THREE.Mesh(geometry, material);
-		scene.add(triangle);
+		var material = new THREE.MeshBasicMaterial({ color: 'blue' });
+		scene.add(new THREE.Mesh(geometry, material));
 	}
+
+	renderer.render(scene, camera);
 </script>
 </html>
