@@ -10,7 +10,7 @@
 		#control   { min-width: 250px; margin-left: 5px; padding-left: 5px; border-left: 1px solid #333; }
 	</style>
 </head>
-<body onload="onLoad()">
+<body>
 	<div id="container"></div>
 	<div id="control"></div>
 </body>
@@ -31,30 +31,28 @@
 <script type="text/javascript">
 	var renderer, scene;
 
-	function onLoad() {
-		var canvasContainer = document.getElementById('container'); //This time we have a <div> element
-		var width = 800;
-		var height = 600;
+	var canvasContainer = document.getElementById('container'); //This time we have a <div> element
+	var width = 800;
+	var height = 600;
 
-		renderer = new THREE.WebGLRenderer(); 
-		renderer.setSize(width, height);
-		canvasContainer.appendChild(renderer.domElement);
+	renderer = new THREE.WebGLRenderer(); 
+	renderer.setSize(width, height);
+	canvasContainer.appendChild(renderer.domElement);
 
-		scene = new THREE.Scene();
+	scene = new THREE.Scene();
 
-		var camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000);
-		camera.position.z = 100;
-		THREEx.WindowResize(renderer, camera, function(){
-			var width = window.innerWidth - 250 - 20 - 5;
-			var height = window.innerHeight - 18
-			return {width: width, height: width * 600 / 800 };
-		}).trigger();
+	var camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000);
+	camera.position.z = 100;
+	THREEx.WindowResize(renderer, camera, function(){
+		var width = window.innerWidth - 250 - 20 - 5;
+		var height = window.innerHeight - 18
+		return {width: width, height: width * 600 / 800 };
+	}).trigger();
 
-		scene.add(camera);
+	scene.add(camera);
 
-		drawTriangle([0.0, 0.0]);
-		renderer.render(scene, camera);
-	}
+	drawTriangle([0.0, 0.0]);
+	renderer.render(scene, camera);
 	
 	function drawTriangle(position) {
 		var geometry = new THREE.Geometry();
