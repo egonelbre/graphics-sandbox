@@ -6,14 +6,15 @@
 	<style>
 		html { background: #111; }
 		body { display: flex; }
-		#container { flex: 1; background: #111; }
-		#control   { min-width: 250px; margin-left: 5px; padding-left: 5px; border-left: 1px solid #333; }
+		#container { position: relative; flex: 1; background: #111; }
+		#control   { position: relative; min-width: 250px; margin-left: 5px; padding-left: 5px; border-left: 1px solid #333; }
 	</style>
 </head>
 
 <script type="text/javascript" src="/~reload.js"></script>
 <script type="text/javascript">(new Reloader()).onchanges = function(){ window.location.reload(); };</script>
 
+<script type="text/javascript" src="/lib/stats.js"></script>
 <link rel="stylesheet" href="/lib/dat.gui.0.7.5.css">
 <script type="text/javascript" src="/lib/dat.gui.0.7.5.js"></script>
 
@@ -23,6 +24,17 @@ function onload(){
 
 	var gui = new dat.GUI({ autoPlace: false, resizable: true });
 	document.getElementById('control').appendChild(gui.domElement);
+
+	var stats = new Stats();
+	document.getElementById('control').appendChild( stats.dom );
+
+	var position = {
+		x: 100,
+		y: 100
+	};
+
+	gui.add(position, "x");
+	gui.add(position, "y");
 
 	var canvas = document.getElementById("canvas");
 	var context = canvas.getContext("2d");
@@ -48,12 +60,26 @@ function onload(){
 	// update the variables
 	window.onresize();
 
-	function render() {
-		window.requestAnimationFrame(render);
+	var time = 0;
 
-		context.clearRect(0, 0, screenWidth, screenHeight);
-		context.font = "40px monospace";
-		context.fillText(+new Date(), 100, 100);
+	function render(now) {
+		var dt = (now - time) * 0.001;
+		time = now;
+
+		stats.begin();
+		{
+			context.clearRect(0, 0, screenWidth, screenHeight);
+			
+			context.fillStyle = "#fff";
+			context.fillRect(0, 0, screenWidth, screenHeight);
+			
+			context.fillStyle = "#000";
+			context.font = "40px Roboto";
+			context.fillText(+new Date(), position.x, position.y);
+			context.fillText("fps:" + ((1 / dt)|0), position.x, position.y + 50);
+		}
+		stats.end();
+		window.requestAnimationFrame(render);
 	}
 	render();
 }
