@@ -1,1 +1,2 @@
-# Three.js sandbox
+# Graphics Sandbox
+
