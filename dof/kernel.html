@@ -32,11 +32,11 @@
 <script type="text/javascript" src="/~reload.js"></script>
 <script type="text/javascript">(new Reloader()).onchanges = function () { window.location.reload(); };</script>
 
-<script type="text/javascript" src="/lib/stats.js"></script>
-<script type="text/javascript" src="/lib/math.js"></script>
+<script type="text/javascript" src="../lib/stats.js"></script>
+<script type="text/javascript" src="../lib/math.js"></script>
 
-<link rel="stylesheet" href="/lib/dat.gui.0.7.5.css">
-<script type="text/javascript" src="/lib/dat.gui.0.7.5.js"></script>
+<link rel="stylesheet" href="../lib/dat.gui.0.7.5.css">
+<script type="text/javascript" src="../lib/dat.gui.0.7.5.js"></script>
 
 <script type="text/javascript">
 	var context;
@@ -65,11 +65,10 @@
 
 		var Range = { x: 4, y: 4 };
 
-		var rgui = gui.addFolder("Range");
+		var rgui = gui.addFolder("Plot Range");
 		rgui.open();
 		rgui.add(Range, "x");
 		rgui.add(Range, "y");
-
 
 		gui.add(params, "scale");
 		gui.add(params, "k");
