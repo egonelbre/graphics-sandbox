@@ -50,10 +50,12 @@
 		document.getElementById('control').appendChild(gui.domElement);
 
 		var Range = { x: 4, y: 4 };
-		gui.Range = gui.addFolder("Plot Range");
+		var Plot = {
+			type: "surface"
+		}
+		gui.Range = gui.addFolder("Plot");
 		gui.Range.open();
-		gui.Range.add(Range, "x");
-		gui.Range.add(Range, "y");
+		gui.Range.add(Plot, "type", ["surface", "heatmap"]).onChange(replot);
 
 		var params = {
 			scale: 2,
@@ -87,13 +89,13 @@
 		function plotSurface(fn, colorscale, opacity) {
 			plot = {
 				x: [], y: [], z: [],
-				type: "surface",
+				type: Plot.type,
 				colorscale: colorscale || "",
 				opacity: opacity || 0.9
 			};
 
-			for (var x = -Range.x; x <= Range.x; x += 0.2) plot.x.push(x);
-			for (var y = -Range.y; y <= Range.x; y += 0.2) plot.y.push(y);
+			for (var x = -Range.x; x <= Range.x; x += 0.1) plot.x.push(x);
+			for (var y = -Range.y; y <= Range.x; y += 0.1) plot.y.push(y);
 
 			plot.z = plot.y.map(y => plot.x.map(x => fn(x, y)));
 			return plot;
@@ -123,6 +125,7 @@
 
 			var plot = plotSurface(fn);
 			Plotly.restyle('container', 'z', [plot.z]);
+			Plotly.restyle('container', 'type', [plot.type]);
 		}
 
 		Plotly.newPlot('container', [
