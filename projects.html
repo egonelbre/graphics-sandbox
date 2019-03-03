@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width">
@@ -11,6 +12,7 @@
 			display: flex;
 			flex-flow: row wrap;
 		}
+
 		.folder {
 			border: 1px solid #ddd;
 			margin: 1em 0.5em;
@@ -25,13 +27,16 @@
 			background: #eee;
 			padding: 0.5em;
 		}
+
 		.files {
 			padding: 0.5em;
 		}
+
 		.file {
 			display: block;
 			padding: 0.2em;
 		}
+
 		.file:hover {
 			background: #eee;
 		}
@@ -39,19 +44,20 @@
 	<script type="text/javascript" src="/~reload.js"></script>
 	<script type="text/javascript">
 		var reloader = new Reloader();
-		reloader.onchanges = function(){
+		reloader.onchanges = function () {
 			window.location.reload();
 		};
 	</script>
 </head>
+
 <body class="folders">
 	{{ range .Folders }}
 	<div class="folder">
 		<div class="title">{{.Title}}</div>
 		<div class="files">
-		{{ range .Files }}
-		<a class="file" href="{{.URL}}">{{.Title}}</a>
-		{{ end }}
+			{{ range .Files }}
+			<a class="file" href="{{.URL}}">{{.Title}}</a>
+			{{ end }}
 		</div>
 	</div>
 	{{ end }}
@@ -63,4 +69,5 @@
 		</div>
 	</div>
 </body>
+
 </html>

@@ -1,88 +1,106 @@
 <!DOCTYPE>
 <html>
+
 <head>
 	<meta charset="UTF-8">
 	<title>Triangle</title>
 	<style>
-		html { background: #111; }
-		body { display: flex; }
-		#container { position: relative; flex: 1; background: #111; }
-		#control   { position: relative; min-width: 250px; margin-left: 5px; padding-left: 5px; border-left: 1px solid #333; }
+		html {
+			background: #111;
+		}
+
+		body {
+			display: flex;
+		}
+
+		#container {
+			position: relative;
+			flex: 1;
+			background: #111;
+		}
+
+		#control {
+			position: relative;
+			min-width: 250px;
+			margin-left: 5px;
+			padding-left: 5px;
+			border-left: 1px solid #333;
+		}
 	</style>
 </head>
 
 <script type="text/javascript" src="/~reload.js"></script>
-<script type="text/javascript">(new Reloader()).onchanges = function(){ window.location.reload(); };</script>
+<script type="text/javascript">(new Reloader()).onchanges = function () { window.location.reload(); };</script>
 
 <script type="text/javascript" src="/lib/stats.js"></script>
 <link rel="stylesheet" href="/lib/dat.gui.0.7.5.css">
 <script type="text/javascript" src="/lib/dat.gui.0.7.5.js"></script>
 
 <script type="text/javascript">
-function onload(){
-	"use strict";
+	function onload() {
+		"use strict";
 
-	var gui = new dat.GUI({ autoPlace: false, resizable: true });
-	document.getElementById('control').appendChild(gui.domElement);
+		var gui = new dat.GUI({ autoPlace: false, resizable: true });
+		document.getElementById('control').appendChild(gui.domElement);
 
-	var stats = new Stats();
-	document.getElementById('control').appendChild( stats.dom );
+		var stats = new Stats();
+		document.getElementById('control').appendChild(stats.dom);
 
-	var position = {
-		x: 100,
-		y: 100
-	};
+		var position = {
+			x: 100,
+			y: 100
+		};
 
-	gui.add(position, "x");
-	gui.add(position, "y");
+		gui.add(position, "x");
+		gui.add(position, "y");
 
-	var canvas = document.getElementById("canvas");
-	var context = canvas.getContext("2d");
+		var canvas = document.getElementById("canvas");
+		var context = canvas.getContext("2d");
 
-	// set canvas size to the correct size
-	var screenWidth = 0;
-	var screenHeight = 0;
-	window.onresize = function(e) {
-		var width = window.innerWidth - 250 - 20 - 5;
-		var height = window.innerHeight - 18;
-		var targetHeight = width * 600 / 800;
-		if(targetHeight > height) {
-			targetHeight = height;
-			width = height * 800 / 600;
-		}
+		// set canvas size to the correct size
+		var screenWidth = 0;
+		var screenHeight = 0;
+		window.onresize = function (e) {
+			var width = window.innerWidth - 250 - 20 - 5;
+			var height = window.innerHeight - 18;
+			var targetHeight = width * 600 / 800;
+			if (targetHeight > height) {
+				targetHeight = height;
+				width = height * 800 / 600;
+			}
 
-		screenWidth = width;
-		screenHeight = targetHeight;
+			screenWidth = width;
+			screenHeight = targetHeight;
 
-		canvas.width = screenWidth;
-		canvas.height = screenHeight;
-	};
-	// update the variables
-	window.onresize();
+			canvas.width = screenWidth;
+			canvas.height = screenHeight;
+		};
+		// update the variables
+		window.onresize();
 
-	var time = 0;
-
-	function render(now) {
-		var dt = (now - time) * 0.001;
-		time = now;
-
-		stats.begin();
-		{
+		function update(now, dt) {
 			context.clearRect(0, 0, screenWidth, screenHeight);
-			
+
 			context.fillStyle = "#fff";
 			context.fillRect(0, 0, screenWidth, screenHeight);
-			
+
 			context.fillStyle = "#000";
 			context.font = "40px Roboto";
 			context.fillText(+new Date(), position.x, position.y);
-			context.fillText("fps:" + ((1 / dt)|0), position.x, position.y + 50);
+			context.fillText("fps:" + ((1 / dt) | 0), position.x, position.y + 50);
 		}
-		stats.end();
-		window.requestAnimationFrame(render);
+
+		var time = 0;
+		function render(now) {
+			stats.begin();
+			var dt = (now - time) * 0.001;
+			time = now;
+			update(now * 0.001, dt);
+			stats.end();
+			window.requestAnimationFrame(render);
+		}
+		render();
 	}
-	render();
-}
 </script>
 
 <body onload="onload()">
