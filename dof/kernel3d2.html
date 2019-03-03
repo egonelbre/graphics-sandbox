@@ -1,0 +1,163 @@
+<!DOCTYPE>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Triangle</title>
+	<style>
+		html {
+			background: #111;
+		}
+
+		body {
+			display: flex;
+		}
+
+		#container {
+			position: relative;
+			flex: 1;
+			background: #111;
+		}
+
+		#control {
+			position: relative;
+			min-width: 250px;
+			margin-left: 5px;
+			padding-left: 5px;
+			border-left: 1px solid #333;
+		}
+	</style>
+</head>
+
+<script type="text/javascript" src="/~reload.js"></script>
+<script type="text/javascript">(new Reloader()).onchanges = function () { window.location.reload(); };</script>
+
+<script type="text/javascript" src="../lib/stats.js"></script>
+<script type="text/javascript" src="../lib/math.js"></script>
+<script type="text/javascript" src="../lib/mathjs.js"></script>
+
+<link rel="stylesheet" href="../lib/dat.gui.0.7.5.css">
+<script type="text/javascript" src="../lib/dat.gui.0.7.5.js"></script>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script type="text/javascript">
+	var plot;
+	function onload() {
+		"use strict";
+
+		var gui = new dat.GUI({ autoPlace: false, resizable: true });
+		document.getElementById('control').appendChild(gui.domElement);
+
+		var Range = { x: 4, y: 4 };
+		var Plot = {
+			type: "surface"
+		}
+		gui.Range = gui.addFolder("Plot");
+		gui.Range.open();
+		gui.Range.add(Plot, "type", ["surface", "heatmap"]).onChange(replot);
+
+		var params = {
+			scale: 2
+		};
+		var X = {
+			A: math.complex(1, 0.2),
+			k: -0.5,
+			p: 1
+		};
+		var Y = {
+			A: math.complex(1, 0.2),
+			k: -0.5,
+			p: 1
+		};
+		var B = math.complex(1, 0.2);
+		var W = math.complex(1, 1);
+
+		gui.Params = gui.addFolder("params");
+		gui.Params.open();
+
+		gui.X = gui.addFolder("X");
+		gui.X.open();
+		gui.X.add(X, "k").onChange(replot);
+		gui.X.add(X, "p").onChange(replot);
+		gui.X.add(X.A, "re").onChange(replot);
+		gui.X.add(X.A, "im").onChange(replot);
+
+		gui.Y = gui.addFolder("Y");
+		gui.Y.open();
+		gui.Y.add(Y, "k").onChange(replot);
+		gui.Y.add(Y, "p").onChange(replot);
+		gui.Y.add(Y.A, "re").onChange(replot);
+		gui.Y.add(Y.A, "im").onChange(replot);
+
+		gui.Weight = gui.addFolder("Weight");
+		gui.Weight.open();
+		gui.Weight.add(W, "re").onChange(replot);
+		gui.Weight.add(W, "im").onChange(replot);
+
+		function plotSurface(fn, colorscale, opacity) {
+			plot = {
+				x: [], y: [], z: [],
+				type: Plot.type,
+				colorscale: colorscale || "",
+				opacity: opacity || 0.9
+			};
+
+			for (var x = -Range.x; x <= Range.x; x += 0.1) plot.x.push(x);
+			for (var y = -Range.y; y <= Range.x; y += 0.1) plot.y.push(y);
+
+			plot.z = plot.y.map(y => plot.x.map(x => fn(x, y)));
+			return plot;
+		}
+
+		var parser = math.parser();
+		parser.set("xA", X.A);
+		parser.set("xK", X.k);
+		parser.set("xP", X.p);
+
+		parser.set("yA", Y.A);
+		parser.set("yK", Y.k);
+		parser.set("yP", Y.p);
+
+		parser.set("W", W);
+
+		parser.eval("dotk(K, x) = K.re * x.re + K.im * x.im");
+		parser.eval("fx(x) = xA*exp(i*xP*x^2)*exp(xK*x^2)");
+		parser.eval("fy(y) = yA*exp(i*yP*y^2)*exp(yK*y^2)");
+		parser.eval("t(x, y) = dotk(W, fx(x) * fy(y))");
+
+		var fn = parser.get("t")
+
+		function replot() {
+			parser.set("xA", X.A);
+			parser.set("xK", X.k);
+			parser.set("xP", X.p);
+
+			parser.set("yA", Y.A);
+			parser.set("yK", Y.k);
+			parser.set("yP", Y.p);
+
+			parser.set("W", W);
+
+			var plot = plotSurface(fn);
+			Plotly.restyle('container', 'z', [plot.z]);
+			Plotly.restyle('container', 'type', [plot.type]);
+		}
+
+		Plotly.newPlot('container', [
+			plotSurface(fn)
+		], {
+				autosize: false,
+				width: 800,
+				height: 600,
+				margin: { l: 0, r: 0, b: 0, t: 0 }
+			}, { showSendToCloud: true });
+	}
+</script>
+
+<body onload="onload()">
+	<div id="container"><canvas id="canvas"></canvas></div>
+	<div id="control"></div>
+</body>
+
+</html>
