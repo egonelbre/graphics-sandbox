@@ -59,7 +59,7 @@
 			re: 1,
 			im: 0.2
 		};
-		var Weight = {
+		var W = {
 			re: 0.9,
 			im: 1.2
 		};
@@ -82,8 +82,8 @@
 
 		var mgui = gui.addFolder("Weight");
 		mgui.open();
-		mgui.add(Weight, "re");
-		mgui.add(Weight, "im");
+		mgui.add(W, "re");
+		mgui.add(W, "im");
 
 		var canvas = document.getElementById("canvas");
 		context = canvas.getContext("2d");
@@ -202,33 +202,18 @@
 
 			var parser = math.parser();
 			parser.set("A", math.complex(A.re, A.im));
+			parser.set("W", math.complex(W.re, W.im));
 			parser.set("K", math.complex(params.k));
 			parser.set("P", math.complex(params.p));
-			parser.eval("fa(x) = A*exp(i*P*x^2)*exp(K*x^2)");
-			var fa = parser.get("fa")
-
-			function fn(x) {
-				return fa(math.complex(x, 0))
-
-				var a = A.re;
-				var ai = A.im;
-				var k = params.k;
-				var p = params.p;
-				var x2 = x * x;
-
-				// (a + ai*i) * exp(i * p * x^2) * exp(k * x^2)
-				return {
-					re: a * exp(k * x2) * cos(p * x2) - ai * exp(k * x2) * sin(p * x2),
-					im: a * exp(k * x2) * sin(p * x2) + ai * exp(k * x2) * cos(p * x2)
-				};
-			}
+			parser.eval("dotk(K, x) = K.re * x.re + K.im * x.im");
+			parser.eval("f(x) = A*exp(i*P*x^2)*exp(K*x^2)");
+			parser.eval("t(x) = dotk(W, f(x))");
+			var fn = parser.get("f")
+			var ft = parser.get("t");
 
 			plot((x) => params.scale * fn(x).re, range, rect, "hsl(0,70%,50%)");
 			plot((x) => params.scale * fn(x).im, range, rect, "hsl(90,70%,50%)");
-			plot((x) => {
-				var p = fn(x);
-				return params.scale * (Weight.im * p.im + Weight.re * p.re);
-			}, range, rect, "hsl(0,0%,0%)");
+			plot((x) => params.scale * ft(x), range, rect, "hsl(0,0%,0%)");
 		}
 
 		var time = 0;
