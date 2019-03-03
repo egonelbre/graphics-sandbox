@@ -63,7 +63,6 @@
 			p: 1
 		};
 		var A = math.complex(1, 0.2);
-		var B = math.complex(1, 0.2);
 		var W = math.complex(1, 1);
 
 		gui.Params = gui.addFolder("params");
@@ -75,11 +74,6 @@
 		gui.A.open();
 		gui.A.add(A, "re").onChange(replot);
 		gui.A.add(A, "im").onChange(replot);
-
-		gui.B = gui.addFolder("B");
-		gui.B.open();
-		gui.B.add(B, "re").onChange(replot);
-		gui.B.add(B, "im").onChange(replot);
 
 		gui.Weight = gui.addFolder("Weight");
 		gui.Weight.open();
@@ -103,22 +97,20 @@
 
 		var parser = math.parser();
 		parser.set("A", A);
-		parser.set("B", B);
 		parser.set("W", W);
 		parser.set("K", params.k);
 		parser.set("P", params.p);
+		parser.set("q", params.q);
+		parser.set("u", params.u);
 
 		parser.eval("dotk(K, x) = K.re * x.re + K.im * x.im");
-		parser.eval("fA(x) = A*exp(i*P*x^2)*exp(K*x^2)");
-		parser.eval("fB(x) = B*exp(i*P*x^2)*exp(K*x^2)");
-		parser.eval("t(x, y) = dotk(W, fA(x) * fA(y))");
-		parser.eval("t2(x, y) = dotk(W, fA(x) * fB(y))");
+		parser.eval("f(x) = A*exp(i*P*x^2)*exp(K*x^2)");
+		parser.eval("t(x, y) = dotk(W, f(x) * f(y))");
 
 		var fn = parser.get("t")
 
 		function replot() {
 			parser.set("A", A);
-			parser.set("B", B);
 			parser.set("W", W);
 			parser.set("K", params.k);
 			parser.set("P", params.p);
