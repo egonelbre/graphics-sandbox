@@ -34,6 +34,7 @@
 
 <script type="text/javascript" src="../lib/stats.js"></script>
 <script type="text/javascript" src="../lib/math.js"></script>
+<script type="text/javascript" src="../lib/mathjs.js"></script>
 
 <link rel="stylesheet" href="../lib/dat.gui.0.7.5.css">
 <script type="text/javascript" src="../lib/dat.gui.0.7.5.js"></script>
@@ -55,8 +56,8 @@
 			p: 1
 		};
 		var A = {
-			re: 0.2,
-			im: 1
+			re: 1,
+			im: 0.2
 		};
 		var Weight = {
 			re: 0.9,
@@ -152,7 +153,7 @@
 			context.save();
 
 			const density = 0.5;
-			var stepfx = abs(range.max.x - range.min.x) / abs(rect.max.x - rect.min.x) / density;
+			var stepfx = (abs(range.max.x - range.min.x) / abs(rect.max.x - rect.min.x)) / density;
 
 			context.beginPath();
 			context.rect(rect.min.x, rect.min.y, rect.max.x - rect.min.x, rect.max.y - rect.min.y);
@@ -199,17 +200,26 @@
 
 			grid(range, rect);
 
+			var parser = math.parser();
+			parser.set("A", math.complex(A.re, A.im));
+			parser.set("K", math.complex(params.k));
+			parser.set("P", math.complex(params.p));
+			parser.eval("fa(x) = A*exp(i*P*x^2)*exp(K*x^2)");
+			var fa = parser.get("fa")
+
 			function fn(x) {
-				var a = A.im;
-				var b = A.re;
+				return fa(math.complex(x, 0))
+
+				var a = A.re;
+				var ai = A.im;
 				var k = params.k;
 				var p = params.p;
 				var x2 = x * x;
 
-				// (a + b*i) * exp(i * p * x^2) * exp(k * x^2)
+				// (a + ai*i) * exp(i * p * x^2) * exp(k * x^2)
 				return {
-					re: a * exp(k * x2) * cos(p * x2) - b * exp(k * x2) * sin(p * x2),
-					im: a * exp(k * x2) * sin(p * x2) + b * exp(k * x2) * cos(p * x2)
+					re: a * exp(k * x2) * cos(p * x2) - ai * exp(k * x2) * sin(p * x2),
+					im: a * exp(k * x2) * sin(p * x2) + ai * exp(k * x2) * cos(p * x2)
 				};
 			}
 
