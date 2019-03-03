@@ -33,10 +33,13 @@
 <script type="text/javascript">(new Reloader()).onchanges = function () { window.location.reload(); };</script>
 
 <script type="text/javascript" src="/lib/stats.js"></script>
+<script type="text/javascript" src="/lib/math.js"></script>
+
 <link rel="stylesheet" href="/lib/dat.gui.0.7.5.css">
 <script type="text/javascript" src="/lib/dat.gui.0.7.5.js"></script>
 
 <script type="text/javascript">
+	var context;
 	function onload() {
 		"use strict";
 
@@ -46,16 +49,44 @@
 		var stats = new Stats();
 		document.getElementById('control').appendChild(stats.dom);
 
-		var position = {
-			x: 100,
-			y: 100
+		var params = {
+			scale: 2,
+			k: -0.5,
+			p: 1
+		};
+		var A = {
+			re: 0.2,
+			im: 1
+		};
+		var Weight = {
+			re: 0.9,
+			im: 1.2
 		};
 
-		gui.add(position, "x");
-		gui.add(position, "y");
+		var Range = { x: 4, y: 4 };
+
+		var rgui = gui.addFolder("Range");
+		rgui.open();
+		rgui.add(Range, "x");
+		rgui.add(Range, "y");
+
+
+		gui.add(params, "scale");
+		gui.add(params, "k");
+		gui.add(params, "p");
+
+		var agui = gui.addFolder("A");
+		agui.open();
+		agui.add(A, "re");
+		agui.add(A, "im");
+
+		var mgui = gui.addFolder("Weight");
+		mgui.open();
+		mgui.add(Weight, "re");
+		mgui.add(Weight, "im");
 
 		var canvas = document.getElementById("canvas");
-		var context = canvas.getContext("2d");
+		context = canvas.getContext("2d");
 
 		// set canvas size to the correct size
 		var screenWidth = 0;
@@ -78,16 +109,116 @@
 		// update the variables
 		window.onresize();
 
+		function fill(rect, color) {
+			context.fillStyle = color || "hsl(0,0%,85%)";
+			context.fillRect(rect.min.x, rect.min.y, rect.max.x - rect.min.x, rect.max.y - rect.min.y);
+		}
+
+		function grid(range, rect, color) {
+			context.save();
+
+			context.fillStyle = color || "hsl(0,0%,95%)";
+			context.fillRect(rect.min.x, rect.min.y, rect.max.x - rect.min.x, rect.max.y - rect.min.y);
+
+			context.beginPath();
+			for (var fx = floor(range.min.x); fx <= range.max.x; fx += 1) {
+				var sx = map(fx, range.min.x, range.max.x, rect.min.x, rect.max.x);
+				context.moveTo(sx, rect.min.y);
+				context.lineTo(sx, rect.max.y);
+			}
+			for (var fy = floor(range.max.y); fy <= range.min.y; fy += 1) {
+				var sy = map(fy, range.min.y, range.max.y, rect.min.y, rect.max.y);
+				context.moveTo(rect.min.x, sy);
+				context.lineTo(rect.max.x, sy);
+			}
+
+			context.strokeStyle = "hsl(0,0%,85%)";
+			context.stroke();
+
+			var cx = map((range.min.x + range.max.x) / 2, range.min.x, range.max.x, rect.min.x, rect.max.x);
+			var cy = map((range.min.y + range.max.y) / 2, range.min.y, range.max.y, rect.min.y, rect.max.y);
+			context.beginPath();
+			context.moveTo(cx, rect.min.y);
+			context.lineTo(cx, rect.max.y);
+			context.moveTo(rect.min.x, cy);
+			context.lineTo(rect.max.x, cy);
+
+			context.strokeStyle = "hsl(0,0%,50%)";
+			context.stroke();
+
+			context.restore();
+		}
+
+		function plot(fn, range, rect, color) {
+			context.save();
+
+			const density = 0.5;
+			var stepfx = abs(range.max.x - range.min.x) / abs(rect.max.x - rect.min.x) / density;
+
+			context.beginPath();
+			context.rect(rect.min.x, rect.min.y, rect.max.x - rect.min.x, rect.max.y - rect.min.y);
+			context.clip();
+
+			context.beginPath();
+			var first = false;
+			for (var fx = range.min.x; fx <= range.max.x + stepfx; fx += stepfx) {
+				var fy = fn(fx);
+
+				var sx = map(fx, range.min.x, range.max.x, rect.min.x, rect.max.x);
+				var sy = map(fy, range.min.y, range.max.y, rect.min.y, rect.max.y);
+
+				if (!Number.isFinite(sx) || !Number.isFinite(sy)) {
+					first = true;
+					continue;
+				}
+
+				if (first) {
+					context.moveTo(sx, sy);
+				} else {
+					context.lineTo(sx, sy);
+				}
+			}
+
+			context.strokeStyle = color || "#000";
+			context.stroke();
+
+			context.restore();
+		}
+
 		function update(now, dt) {
 			context.clearRect(0, 0, screenWidth, screenHeight);
 
 			context.fillStyle = "#fff";
 			context.fillRect(0, 0, screenWidth, screenHeight);
 
-			context.fillStyle = "#000";
-			context.font = "40px Roboto";
-			context.fillText(+new Date(), position.x, position.y);
-			context.fillText("fps:" + ((1 / dt) | 0), position.x, position.y + 50);
+			var rect = { min: { x: 0, y: 0 }, max: { x: screenWidth, y: screenHeight } };
+			var range = {
+				min: { x: -Range.x, y: Range.y },
+				max: { x: Range.x, y: -Range.y }
+			};
+
+			grid(range, rect);
+
+			function fn(x) {
+				var a = A.im;
+				var b = A.re;
+				var k = params.k;
+				var p = params.p;
+				var x2 = x * x;
+
+				// (a + b*i) * exp(i * p * x^2) * exp(k * x^2)
+				return {
+					re: a * exp(k * x2) * cos(p * x2) - b * exp(k * x2) * sin(p * x2),
+					im: a * exp(k * x2) * sin(p * x2) + b * exp(k * x2) * cos(p * x2)
+				};
+			}
+
+			plot((x) => params.scale * fn(x).re, range, rect, "hsl(0,70%,50%)");
+			plot((x) => params.scale * fn(x).im, range, rect, "hsl(90,70%,50%)");
+			plot((x) => {
+				var p = fn(x);
+				return params.scale * (Weight.im * p.im + Weight.re * p.re);
+			}, range, rect, "hsl(0,0%,0%)");
 		}
 
 		var time = 0;
