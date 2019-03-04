@@ -50,18 +50,25 @@
 		var stats = new Stats();
 		document.getElementById('control').appendChild(stats.dom);
 
-		var params = {
-			scale: 2,
-			k: -0.5,
-			p: 1
-		};
 		var A = {
-			re: 1,
-			im: 0.2
+			x: 1,
+			y: 1,
+			z: 1,
+			w: 1
 		};
-		var Weight = {
-			re: 0.9,
-			im: 1.2
+
+		var B = {
+			x: -1,
+			y: -1,
+			z: -1,
+			w: -1
+		};
+
+		var K = {
+			x: 1,
+			y: 1,
+			z: 1,
+			w: 1
 		};
 
 		var Range = { x: 4, y: 4 };
@@ -71,19 +78,26 @@
 		rgui.add(Range, "x");
 		rgui.add(Range, "y");
 
-		gui.add(params, "scale");
-		gui.add(params, "k");
-		gui.add(params, "p");
-
 		var agui = gui.addFolder("A");
 		agui.open();
-		agui.add(A, "re");
-		agui.add(A, "im");
+		agui.add(A, "x");
+		agui.add(A, "y");
+		agui.add(A, "z");
+		agui.add(A, "w");
 
-		var mgui = gui.addFolder("Weight");
+		var bgui = gui.addFolder("B");
+		bgui.open();
+		bgui.add(B, "x");
+		bgui.add(B, "y");
+		bgui.add(B, "z");
+		bgui.add(B, "w");
+
+		var mgui = gui.addFolder("K");
 		mgui.open();
-		mgui.add(Weight, "re");
-		mgui.add(Weight, "im");
+		mgui.add(K, "x");
+		mgui.add(K, "y");
+		mgui.add(K, "z");
+		mgui.add(K, "w");
 
 		var canvas = document.getElementById("canvas");
 		context = canvas.getContext("2d");
@@ -200,35 +214,68 @@
 
 			grid(range, rect);
 
-			var parser = math.parser();
-			parser.set("A", math.complex(A.re, A.im));
-			parser.set("K", math.complex(params.k));
-			parser.set("P", math.complex(params.p));
-			parser.eval("fa(x) = A*exp(i*P*x^2)*exp(K*x^2)");
-			var fa = parser.get("fa")
-
-			function fn(x) {
-				return fa(math.complex(x, 0))
-
-				var a = A.re;
-				var ai = A.im;
-				var k = params.k;
-				var p = params.p;
-				var x2 = x * x;
-
-				// (a + ai*i) * exp(i * p * x^2) * exp(k * x^2)
+			function qmul(a, b) {
 				return {
-					re: a * exp(k * x2) * cos(p * x2) - ai * exp(k * x2) * sin(p * x2),
-					im: a * exp(k * x2) * sin(p * x2) + ai * exp(k * x2) * cos(p * x2)
+					x: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,  // 1
+					y: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,  // i
+					z: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,  // j
+					w: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w   // k
 				};
 			}
 
-			plot((x) => params.scale * fn(x).re, range, rect, "hsl(0,70%,50%)");
-			plot((x) => params.scale * fn(x).im, range, rect, "hsl(90,70%,50%)");
+			function qdot(a, b) {
+				return a.x * b.x +
+					a.y * b.y +
+					a.z * b.z +
+					a.w * b.w;
+			}
+
+			function fn(x) {
+				// A * exp(B * x^2)
+
+				var x2 = x * x;
+				var r2 = x2 * (B.x * B.x + B.y * B.y + B.z * B.z);
+				var r = Math.sqrt(r2);
+
+				var expBx = exp(B.w * x2);
+				var sinrr = sin(r) / r;
+				return qmul(A, {
+					w: expBx * cos(r),
+					x: expBx * sinrr * B.x * x2,
+					y: expBx * sinrr * B.y * x2,
+					z: expBx * sinrr * B.z * x2
+				});
+			}
+
+			/*
+			var a = A.re;
+			var ai = A.im;
+			var k = params.k;
+			var p = params.p;
+			var x2 = x * x;
+
+			// (a + ai*i) * exp(i * p * x^2) * exp(k * x^2)
+			return {
+				re: a * exp(k * x2) * cos(p * x2) - ai * exp(k * x2) * sin(p * x2),
+				im: a * exp(k * x2) * sin(p * x2) + ai * exp(k * x2) * cos(p * x2)
+			};
+			*/
+
+			plot((x) => fn(x).x, range, rect, "hsl(0,70%,50%)");
+			plot((x) => fn(x).y, range, rect, "hsl(70,70%,50%)");
+			plot((x) => fn(x).z, range, rect, "hsl(140,70%,50%)");
+			plot((x) => fn(x).w, range, rect, "hsl(210,70%,50%)");
+
+			plot((x) => {
+				return qdot(K, fn(x));
+			}, range, rect, "hsl(210,0%,0%)");
+
+			/*
 			plot((x) => {
 				var p = fn(x);
 				return params.scale * (Weight.im * p.im + Weight.re * p.re);
 			}, range, rect, "hsl(0,0%,0%)");
+			*/
 		}
 
 		var time = 0;
