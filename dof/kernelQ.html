@@ -50,26 +50,9 @@
 		var stats = new Stats();
 		document.getElementById('control').appendChild(stats.dom);
 
-		var A = {
-			x: 1,
-			y: 1,
-			z: 1,
-			w: 1
-		};
-
-		var B = {
-			x: -1,
-			y: -1,
-			z: -1,
-			w: -1
-		};
-
-		var K = {
-			x: 1,
-			y: 1,
-			z: 1,
-			w: 1
-		};
+		var A = { x: 1, y: 1, z: 1, w: 1 };
+		var B = { x: -1, y: -1, z: -1, w: -1 };
+		var K = { x: 1, y: 1, z: 1, w: 1 };
 
 		var Range = { x: 4, y: 4 };
 
@@ -247,20 +230,6 @@
 				});
 			}
 
-			/*
-			var a = A.re;
-			var ai = A.im;
-			var k = params.k;
-			var p = params.p;
-			var x2 = x * x;
-
-			// (a + ai*i) * exp(i * p * x^2) * exp(k * x^2)
-			return {
-				re: a * exp(k * x2) * cos(p * x2) - ai * exp(k * x2) * sin(p * x2),
-				im: a * exp(k * x2) * sin(p * x2) + ai * exp(k * x2) * cos(p * x2)
-			};
-			*/
-
 			plot((x) => fn(x).x, range, rect, "hsl(0,70%,50%)");
 			plot((x) => fn(x).y, range, rect, "hsl(70,70%,50%)");
 			plot((x) => fn(x).z, range, rect, "hsl(140,70%,50%)");
@@ -269,13 +238,6 @@
 			plot((x) => {
 				return qdot(K, fn(x));
 			}, range, rect, "hsl(210,0%,0%)");
-
-			/*
-			plot((x) => {
-				var p = fn(x);
-				return params.scale * (Weight.im * p.im + Weight.re * p.re);
-			}, range, rect, "hsl(0,0%,0%)");
-			*/
 		}
 
 		var time = 0;

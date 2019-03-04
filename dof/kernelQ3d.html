@@ -1,0 +1,160 @@
+<!DOCTYPE>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Triangle</title>
+	<style>
+		html {
+			background: #111;
+		}
+
+		body {
+			display: flex;
+		}
+
+		#container {
+			position: relative;
+			flex: 1;
+			background: #111;
+		}
+
+		#control {
+			position: relative;
+			min-width: 250px;
+			margin-left: 5px;
+			padding-left: 5px;
+			border-left: 1px solid #333;
+		}
+	</style>
+</head>
+
+<script type="text/javascript" src="/~reload.js"></script>
+<script type="text/javascript">(new Reloader()).onchanges = function () { window.location.reload(); };</script>
+
+<script type="text/javascript" src="../lib/stats.js"></script>
+<script type="text/javascript" src="../lib/math.js"></script>
+<script type="text/javascript" src="../lib/mathjs.js"></script>
+
+<link rel="stylesheet" href="../lib/dat.gui.0.7.5.css">
+<script type="text/javascript" src="../lib/dat.gui.0.7.5.js"></script>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script type="text/javascript">
+	var plot;
+	function onload() {
+		"use strict";
+
+		var gui = new dat.GUI({ autoPlace: false, resizable: true });
+		document.getElementById('control').appendChild(gui.domElement);
+
+		var Range = { x: 4, y: 4 };
+		var Plot = {
+			type: "surface"
+		}
+		gui.Range = gui.addFolder("Plot");
+		gui.Range.open();
+		gui.Range.add(Plot, "type", ["surface", "heatmap"]).onChange(replot);
+
+
+		var A = { x: 1, y: 1, z: 1, w: 1 };
+		var B = { x: -1, y: -1, z: -1, w: -1 };
+		var K = { x: 1, y: 1, z: 1, w: 1 };
+
+		var agui = gui.addFolder("A");
+		agui.open();
+		agui.add(A, "x").onChange(replot);
+		agui.add(A, "y").onChange(replot);
+		agui.add(A, "z").onChange(replot);
+		agui.add(A, "w").onChange(replot);
+
+		var bgui = gui.addFolder("B");
+		bgui.open();
+		bgui.add(B, "x").onChange(replot);
+		bgui.add(B, "y").onChange(replot);
+		bgui.add(B, "z").onChange(replot);
+		bgui.add(B, "w").onChange(replot);
+
+		var mgui = gui.addFolder("K");
+		mgui.open();
+		mgui.add(K, "x").onChange(replot);
+		mgui.add(K, "y").onChange(replot);
+		mgui.add(K, "z").onChange(replot);
+		mgui.add(K, "w").onChange(replot);
+
+		function plotSurface(fn, colorscale, opacity) {
+			plot = {
+				x: [], y: [], z: [],
+				type: Plot.type,
+				colorscale: colorscale || "",
+				opacity: opacity || 0.9
+			};
+
+			for (var x = -Range.x; x <= Range.x; x += 0.1) plot.x.push(x);
+			for (var y = -Range.y; y <= Range.x; y += 0.1) plot.y.push(y);
+
+			plot.z = plot.y.map(y => plot.x.map(x => fn(x, y)));
+			return plot;
+		}
+
+
+		function qmul(a, b) {
+			return {
+				x: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,  // 1
+				y: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,  // i
+				z: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,  // j
+				w: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w   // k
+			};
+		}
+
+		function qdot(a, b) {
+			return a.x * b.x +
+				a.y * b.y +
+				a.z * b.z +
+				a.w * b.w;
+		}
+
+		function f(x) {
+			// A * exp(B * x^2)
+			var x2 = x * x;
+			var r2 = x2 * (B.x * B.x + B.y * B.y + B.z * B.z);
+			var r = Math.sqrt(r2);
+
+			var expBx = exp(B.w * x2);
+			var sinrr = sin(r) / r;
+			return qmul(A, {
+				w: expBx * cos(r),
+				x: expBx * sinrr * B.x * x2,
+				y: expBx * sinrr * B.y * x2,
+				z: expBx * sinrr * B.z * x2
+			});
+		}
+
+		function fn(x, y) {
+			return qdot(K, qmul(f(x), f(y)));
+		}
+
+		function replot() {
+			var plot = plotSurface(fn);
+			Plotly.restyle('container', 'z', [plot.z]);
+			Plotly.restyle('container', 'type', [plot.type]);
+		}
+
+		Plotly.newPlot('container', [
+			plotSurface(fn)
+		], {
+				autosize: false,
+				width: 800,
+				height: 600,
+				margin: { l: 0, r: 0, b: 0, t: 0 }
+			}, { showSendToCloud: true });
+	}
+</script>
+
+<body onload="onload()">
+	<div id="container"><canvas id="canvas"></canvas></div>
+	<div id="control"></div>
+</body>
+
+</html>
